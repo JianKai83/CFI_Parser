@@ -10,7 +10,8 @@ count_t=0
 dir =1
 nu = 0
 tmp = 0
-angle_DF = []
+angle_elbow_DF = []
+angle_body_DF = []
 
 
 while (cap.isOpened()):
@@ -19,11 +20,12 @@ while (cap.isOpened()):
         break
 
     if tmp == 0:
-        fourcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v')
-        wrt = cv2.VideoWriter('good'+ str(nu) +'.mp4', fourcc, 10.0, (1280, 720))
+        # fourcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v')
+        # wrt = cv2.VideoWriter('good'+ str(nu) +'.mp4', fourcc, 10.0, (1280, 720))
         tmp+=1
         nu +=1
-        angle_list = []
+        angle_elbow_list = []
+        angle_body_list = []
 
     img = cv2.resize(img,(1280,720))
     img = detector.findPose(img,False)
@@ -32,10 +34,14 @@ while (cap.isOpened()):
 
     if len(lmList) != 0:
         #Right Arm
-        angle = detector.findAngle(img, 12,14,16)
-        angle_list.append(angle)
+        angle_elbow = detector.findAngle(img, 12,14,16)
+        angle_elbow_list.append(angle_elbow)
 
-        per = np.interp(angle,(70, 160),(0,100))
+        #Body
+        angle_body = detector.findAngle(img, 12, 24, 26)
+        angle_body_list.append(angle_body)
+
+        per = np.interp(angle_elbow,(70, 150),(0,100))
 
         #dir =1 代表行程往上
         if per == 0:
@@ -47,20 +53,24 @@ while (cap.isOpened()):
                 count += 0.5
                 dir = 1
 
-
+    cv2.rectangle(img, (0, 450), (250, 720), (0, 255, 0), cv2.FILLED)
+    cv2.putText(img, str(int(count)), (45, 670), cv2.FONT_HERSHEY_PLAIN, 15,
+                (255, 0, 0), 25)
     cv2.imshow("Image", img)
     cv2.waitKey(1)
 
-    wrt.write(img)
+    # wrt.write(img)
 
     if (count-count_t)==1:
-        wrt.release()
-        fourcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v')
-        wrt = cv2.VideoWriter('good'+ str(nu) +'.mp4', fourcc, 10.0, (1280, 720))
+        # wrt.release()
+        # fourcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v')
+        # wrt = cv2.VideoWriter('good'+ str(nu) +'.mp4', fourcc, 10.0, (1280, 720))
         nu+=1
         count_t+=1
-        angle_DF.append(angle_list)
-        angle_list=[]
+        angle_elbow_DF.append(angle_elbow_list)
+        angle_body_DF.append(angle_body_list)
+        angle_elbow_list=[]
+        angle_body_list = []
 
     if cv2.waitKey(5) & 0xff == ord("q"):
         break
@@ -68,5 +78,7 @@ while (cap.isOpened()):
 cap.release()
 cv2.destroyAllWindows()
 
-df = pd.DataFrame(angle_DF)
-df.to_csv('Biceps_Curl_good.csv',index=False)
+df_elbow = pd.DataFrame(angle_elbow_DF)
+df_body = pd.DataFrame(angle_body_DF)
+df_elbow.to_csv('Biceps_Curl_elbow_good.csv',index=False)
+df_body.to_csv('Biceps_Curl_body_good.csv',index=False)

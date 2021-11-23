@@ -47,11 +47,11 @@ def main():
     df_bad = pd.read_csv('Biceps_Curl_bad_dtw.csv')
 
     df_all = pd.concat([df_good,df_bad])
-    df_all = df_all.rename(columns={'0':'dtw_score','1':'Lable'})
+    df_all = df_all.rename(columns={'0':'elbow_dtw_score','1':'body_dtw_score','2':'Lable'})
     df_all = df_all.reset_index(drop = True)
     print(df_all)
 
-    X = df_all[['dtw_score']]  # Features
+    X = df_all[['elbow_dtw_score', 'body_dtw_score']]  # Features
     y = df_all['Lable']  # Labels
 
     # Split dataset into training set and test set
